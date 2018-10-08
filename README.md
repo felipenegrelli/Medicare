@@ -1,9 +1,9 @@
 # Projeto Medicare
 
 ## Integrantes:
-* Felipe Negrelli
-* Edson Boldrini
 * Diego Gava Monteiro
+* Edson Boldrini
+* Felipe Negrelli
 * Yago Henrique
 
 ## Aplicação Backend:
@@ -33,5 +33,6 @@
 * Criar um dispositivo virtual usando o AVD Manager do Android Studio, escolhendo a API versão 27;
 * Instalar o Node.js, o JDK8 e Python2 se ainda não estiverem instalados na máquina;
 * Instalar o CLI do React Native usando o comando `npm install -g react-native-cli`;
+* Acessar a pasta do Aplicativo usando o terminal;
 * Executar o comando `npm install` para instalar as dependências do projeto;
 * Rodar o comando `react-native run-android` para instalar e emulaçar o aplicativo no Android virtualizado;

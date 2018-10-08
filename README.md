@@ -1,12 +1,12 @@
 # Projeto Medicare
 
-### Integrantes:
+## Integrantes:
 * Felipe Negrelli
 * Edson Boldrini
 * Diego Gava Monteiro
 * Yago Henrique
 
-### Aplicação Backend:
+## Aplicação Backend:
 #### Configurações para desenvolvimento:
 
 * Acessar a pasta do Backend usando o terminal;
@@ -25,7 +25,7 @@
 * Rodar o comando `adonis serve --dev` para iniciar;
 * A aplicação estará rodando no caminho `127.0.0.1:3333`.
 
-### Aplicação Mobile:
+## Aplicação Mobile:
 #### Configurações para desenvolvimento:
 
 * Instalar o Android Studio;

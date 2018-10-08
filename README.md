@@ -20,8 +20,7 @@
 ..* DB_PORT=5432
 ..* DB_USER=postgres
 ..* DB_PASSWORD=postgres
-..* DB_DATABASE=medicare
-    
+..* DB_DATABASE=medicare    
 * Rodar o comando `adonis migration:run` no terminal na raiz da aplicação para criação das tabelas do BD;
 * Rodar o comando `adonis serve --dev` para iniciar;
 * A aplicação estará rodando no caminho `127.0.0.1:3333`.

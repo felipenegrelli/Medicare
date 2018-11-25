@@ -1,0 +1,36 @@
+
+<Container>
+<StatusBar hidden />
+<Logo source={require('../../images/logo.png')} resizeMode="contain" />
+{this.state.success.length !== 0 && <SuccessMessage>{this.state.success}</SuccessMessage>}
+<Input
+    placeholder="Nome de usuário"
+    value={this.state.username}
+    onChangeText={this.handleUsernameChange}
+    autoCapitalize="none"
+    autoCorrect={false}
+/>
+<Input
+    placeholder="Endereço de e-mail"
+    value={this.state.email}
+    onChangeText={this.handleEmailChange}
+    autoCapitalize="none"
+    autoCorrect={false}
+/>
+<Input
+    placeholder="Senha"
+    value={this.state.password}
+    onChangeText={this.handlePasswordChange}
+    autoCapitalize="none"
+    autoCorrect={false}
+    secureTextEntry
+/>
+{this.state.error.length !== 0 && <ErrorMessage>{this.state.error}</ErrorMessage>}
+<Button onPress={this.handleSignUpPress}>
+    <ButtonText>Criar conta</ButtonText>
+</Button>
+<SignInLink onPress={this.handleBackToLoginPress}>
+    <SignInLinkText>Voltar ao login</SignInLinkText>
+</SignInLink>
+</Container>
+

@@ -5,7 +5,6 @@ import axios from 'axios';
 import { StackActions, NavigationActions } from 'react-navigation';
 import { StyleSheet, View, AsyncStorage, TouchableOpacity, } from 'react-native';
 import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Icon, Thumbnail } from 'native-base';
-import { Autocomplete } from 'native-base-autocomplete';
 
 import api from '../../../services/api';
 
@@ -55,9 +54,39 @@ export default class RealizarPedido extends Component {
 
   };
 
+
+  async pesquisar(nome) {
+    try {
+      console.log("entrou para atualizar lista de pedidos");
+
+      axios.defaults.headers.common['Authorization'] = await AsyncStorage.getItem('token');    
+
+      await api.get('/medicamentos')
+      .then((res) => {
+        console.log("recebeu retorno");        
+        if(JSON.stringify(this.state.listaPedidos) != JSON.stringify(res.data)){
+          this.setState({ listaPedidos: res.data });
+          console.log("alterou estado");
+          console.log(res.data);
+        }        
+      })
+      .catch((res) => {
+        console.log(res);
+        this.setState({ error: JSON.stringify(res)+"" });
+      });
+
+    } 
+    catch(err){
+      console.log(err);
+      this.setState({ error: 'Ocorreu um erro ao atualizar a lista de pedidos!' });
+    }
+  }
+
+
+
+
+
   render() {
-    const { query } = this.state;
-    const data = this._filterData(query);
 
     return (
       <Container>
@@ -79,21 +108,8 @@ export default class RealizarPedido extends Component {
 
           <Form>
 
-            <View style={styles.autocompleteContainer}>
-              <Autocomplete 
-                data={data}
-                defaultValue={query}
-                onChangeText={text => this.setState({ query: text })}
-                renderItem={data => (
-                  <TouchableOpacity onPress={() => this.setState({ query: data })}>
-                    <Text>{data}</Text>
-                  </TouchableOpacity>
-                )} 
-              />
-            </View>
-
             <Item stackedLabel>
-              <Label>Nome do Medicamento</Label>
+              <Label>Medicamento</Label>
               <Input 
                 value={this.state.nomeRemedio}
                 onChangeText={(nomeRemedio) => this.setState({ nomeRemedio })}

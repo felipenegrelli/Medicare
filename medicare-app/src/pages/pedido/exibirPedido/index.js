@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 
 import { StyleSheet, AsyncStorage, View, Image } from 'react-native';
-import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Icon, Toast } from 'native-base';
+import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Toast } from 'native-base';
 import api from '../../../services/api';
 
 export default class ExibirPedido extends Component {
@@ -42,10 +42,9 @@ export default class ExibirPedido extends Component {
           this.setState({ 
             dataCadastro: dataCadastro.toLocaleDateString(),
             nomeMedico: res.data.nomeMedico,
-            nomeRemedio: res.data.nomeRemedio,
+            nomeRemedio: res.data.medicamentoComercial.nome,
             quantidade: res.data.quantidade,
             status: res.data.status,
-            tamanho: res.data.tamanho,
             crmMedico: res.data.crmMedico
           });
 
@@ -140,7 +139,7 @@ export default class ExibirPedido extends Component {
         <Header>
           <Left>
             <Button transparent onPress={() => this.props.navigation.goBack()}>
-              <Icon name='arrow-back' />
+              <Image source={require('../../../images/return-icon.png')} resizeMode="contain" />
             </Button>
           </Left>
           <Body>
@@ -149,7 +148,7 @@ export default class ExibirPedido extends Component {
           </Body>
           <Right>
             <Button transparent onPress={() => this.atualizar()}>
-              <Icon name='refresh' />
+              <Image source={require('../../../images/refresh-icon.png')} resizeMode="contain" />
             </Button>
           </Right>
         </Header>
@@ -162,12 +161,8 @@ export default class ExibirPedido extends Component {
               <Input disabled >{this.state.status}</Input>
             </Item>
             <Item stackedLabel>
-              <Label>Nome do Medicamento</Label>
+              <Label>Medicamento</Label>
               <Input disabled >{this.state.nomeRemedio}</Input>
-            </Item>
-            <Item stackedLabel>
-              <Label>Tamanho</Label>
-              <Input disabled >{this.state.tamanho ? this.state.tamanho + " mg" : ""}</Input>
             </Item>
             <Item stackedLabel>
               <Label>Quantidade</Label>

@@ -2,9 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 
-import { StackActions, NavigationActions } from 'react-navigation';
-import { StyleSheet, View, AsyncStorage, TouchableOpacity, } from 'react-native';
-import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Icon, Thumbnail } from 'native-base';
+import { StyleSheet, View, AsyncStorage, Image } from 'react-native';
+import { List, ListItem, Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Thumbnail } from 'native-base';
 
 import api from '../../../services/api';
 
@@ -21,34 +20,37 @@ export default class RealizarPedido extends Component {
   };
 
   state = {
+    idRemedio: null,
     nomeRemedio: "",
-    tamanho: null,
     quantidade: null,
     nomeMedico: "",
+    crmMedico: "",
     error: "",
-    query: ""
-
+    listaMedicamentos: []
   };
 
    handleDonationSave = async () => {
      try{
-
+      console.log("entrou para salvar");
       axios.defaults.headers.common['Authorization'] = await AsyncStorage.getItem('token');    
-  
-      await api.post('/pedidos', {
-        nomeRemedio: this.state.nomeRemedio,
-        tamanho: this.state.tamanho,
+      let obj = {
+        medicamentoComercial: this.state.idRemedio,
         quantidade: this.state.quantidade,
         nomeMedico: this.state.nomeMedico,
-      })
+        crmMedico: this.state.crmMedico
+      };
+      console.log(obj);
+      await api.post('/pedidos', obj)
       .then(res => {
         this.props.navigation.navigate('PedidosUsuario');
       })
       .catch((res) => {
-        this.setState({ error: 'Houve um ao salvar o pedido: ' + _err.statusMessage });
+        console.log(res);
+        this.setState({ error: 'Houve um ao salvar o pedido: ' + res.statusMessage });
       });
 
     } catch (_err) {
+      console.log(_err);
       this.setState({ error: 'Houve um ao salvar o pedido: ' + _err.statusMessage });
     }
 
@@ -57,15 +59,20 @@ export default class RealizarPedido extends Component {
 
   async pesquisar(nome) {
     try {
-      console.log("entrou para atualizar lista de pedidos");
+      this.setState({ 
+        idRemedio: null,
+        nomeRemedio: nome
+       });
+      console.log("entrou para pesquisar");
 
       axios.defaults.headers.common['Authorization'] = await AsyncStorage.getItem('token');    
 
-      await api.get('/medicamentos')
+      await api.get('/medicamentos/medicamentoscomerciais?medicamento=' + nome)
       .then((res) => {
-        console.log("recebeu retorno");        
-        if(JSON.stringify(this.state.listaPedidos) != JSON.stringify(res.data)){
-          this.setState({ listaPedidos: res.data });
+        console.log("recebeu retorno");     
+        console.log(res.data);
+        if(JSON.stringify(this.state.listaMedicamentos) != JSON.stringify(res.data)){
+          this.setState({ listaMedicamentos: res.data });
           console.log("alterou estado");
           console.log(res.data);
         }        
@@ -82,9 +89,47 @@ export default class RealizarPedido extends Component {
     }
   }
 
+  selecionaItem(item){
+    this.setState({ 
+      idRemedio: item._id,
+      nomeRemedio : item.nome,
+      listaMedicamentos: []
+     });
 
+  }
 
+  perdeFoco(){    
+    this.setState({ listaMedicamentos: null });
+    if(this.state.idRemedio == null){
+      this.setState({ nomeRemedio: "" });
+    }
+  }
 
+  mostaListaAutocomplete () {
+    if(this.state.listaMedicamentos != null && this.state.listaMedicamentos.length > 0){
+      return (
+        <List>
+          {this.state.listaMedicamentos.map((item, index) => {
+            return (
+              <View key={item._id}>
+              <ListItem 
+                onPress={() => this.selecionaItem(item)}               
+                >
+                <Body>
+                  <Text>{item.nome}</Text>
+                  <Text note>{item.medicamento.nomeMedicamento}</Text>
+                </Body>
+              </ListItem>
+              </View>
+            )
+          })}
+        </List>
+      );
+    }
+    else{
+      return null;
+    }
+  }
 
   render() {
 
@@ -94,7 +139,7 @@ export default class RealizarPedido extends Component {
         <Header>
           <Left>
             <Button transparent onPress={() => this.props.navigation.goBack()}>
-              <Icon name='arrow-back' />
+              <Image source={require('../../../images/return-icon.png')} resizeMode="contain" />
             </Button>
           </Left>
           <Body>
@@ -112,12 +157,14 @@ export default class RealizarPedido extends Component {
               <Label>Medicamento</Label>
               <Input 
                 value={this.state.nomeRemedio}
-                onChangeText={(nomeRemedio) => this.setState({ nomeRemedio })}
+                onChangeText={(nomeRemedio) => this.pesquisar(nomeRemedio)}
+                onBlur={() =>  this.perdeFoco()}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </Item>
 
+            { this.mostaListaAutocomplete()}
 
             <Item stackedLabel>
               <Label>Quantidade</Label>
@@ -138,33 +185,17 @@ export default class RealizarPedido extends Component {
                 autoCorrect={false}
               />
             </Item>
+
+            <Item stackedLabel>
+              <Label>CRM do Médico</Label>
+              <Input 
+                value={this.state.crmMedico}
+                onChangeText={(crmMedico) => this.setState({ crmMedico })}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </Item>
           </Form>
-
-          {/* <View style={styles.prescritionLabel} >
-            <Text style={styles.prescritionLabelText}>Foto da Prescrição Médica</Text>
-          </View> */}
-
-          {/* <View style={styles.prescritionCanvas}>
-
-            <View style={styles.prescritionData}>
-              <View style={styles.prescritionText}>
-                <Text>Tire uma foto da Prescrição Médica</Text>
-              </View>
-              <View style={styles.prescritionImage}>
-                <Thumbnail></Thumbnail>
-              </View>
-            </View>
-
-            <View style={styles.prescritionButtons}>
-              <Button bordered primary style={{ marginRight: 5 }}>
-                <Text>Tirar Foto</Text>
-              </Button>
-              <Button bordered danger disabled>
-                <Text>Remover Foto</Text>
-              </Button>
-            </View>
-
-          </View> */}
 
           {this.state.error.length !== 0 && <Text style={styles.errorMessage}>{this.state.error}</Text>}
 

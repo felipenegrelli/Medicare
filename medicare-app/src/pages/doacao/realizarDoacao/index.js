@@ -2,9 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 
-import { StackActions, NavigationActions } from 'react-navigation';
-import { StyleSheet, View, AsyncStorage } from 'react-native';
-import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Icon, Thumbnail, DatePicker } from 'native-base';
+import { StyleSheet, View, AsyncStorage, Image } from 'react-native';
+import { List, ListItem, Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, DatePicker } from 'native-base';
 
 import api from '../../../services/api';
 
@@ -21,12 +20,12 @@ export default class RealizarDoacao extends Component {
   };
 
   state = {
-    nomeMedicamento: "",
-    tamanho: null,
+    idMedicamento: null,
+    nomeMedicamento: null,
     quantidade: null,
-    nomeMedico: "",
     dataValidade: "",
-    error: ""
+    error: "",
+    listaMedicamentos: []
   };
 
    handleDonationSave = async () => {
@@ -39,8 +38,7 @@ export default class RealizarDoacao extends Component {
       this.state.dataValidade.getDate();
   
       await api.post('/doacoes', {
-        nomeMedicamento: this.state.nomeMedicamento,
-        tamanho: this.state.tamanho,
+        medicamentoComercial: this.state.idMedicamento,
         quantidade: this.state.quantidade,
         dataValidade: dataValidadeFormatada
       })
@@ -50,13 +48,13 @@ export default class RealizarDoacao extends Component {
       })
       .catch((res) => {
         console.log(res);
-        this.setState({ error: 'Houve um ao salvar o pedido: ' + res.statusMessage });
+        this.setState({ error: 'Houve um erro ao salvar o pedido: ' + res.statusMessage });
       });
 
     } 
     catch (_err) {
       console.log(_err);
-      this.setState({ error: 'Houve um ao salvar o pedido: ' + _err.statusMessage });
+      this.setState({ error: 'Houve um erro ao salvar o pedido: ' + _err.statusMessage });
     }
 
   };
@@ -66,6 +64,81 @@ export default class RealizarDoacao extends Component {
     this.setState({ dataValidade })
   }
 
+  async pesquisar(nome) {
+    try {
+      this.setState({ 
+        idMedicamento: null,
+        nomeMedicamento: nome
+       });
+      console.log("entrou para pesquisar");
+
+      axios.defaults.headers.common['Authorization'] = await AsyncStorage.getItem('token');    
+
+      await api.get('/medicamentos/medicamentoscomerciais?medicamento=' + nome)
+      .then((res) => {
+        console.log("recebeu retorno");     
+        console.log(res.data);
+        if(JSON.stringify(this.state.listaMedicamentos) != JSON.stringify(res.data)){
+          this.setState({ listaMedicamentos: res.data });
+          console.log("alterou estado");
+          console.log(res.data);
+        }        
+      })
+      .catch((res) => {
+        console.log(res);
+        this.setState({ error: JSON.stringify(res)+"" });
+      });
+
+    } 
+    catch(err){
+      console.log(err);
+      this.setState({ error: 'Ocorreu um erro ao atualizar a lista de pedidos!' });
+    }
+  }
+
+  selecionaItem(item){
+    this.setState({ 
+      idMedicamento: item._id,
+      nomeMedicamento : item.nome,
+      listaMedicamentos: []
+     });
+
+  }
+
+  perdeFoco(){    
+    this.setState({ listaMedicamentos: null });
+    if(this.state.idMedicamento == null){
+      this.setState({ nomeMedicamento: "" });
+    }
+  }
+
+  mostaListaAutocomplete () {
+    if(this.state.listaMedicamentos != null && this.state.listaMedicamentos.length > 0){
+      return (
+        <List> 
+          {this.state.listaMedicamentos.map((item, index) => {
+            return (
+              <View key={item._id}>
+              <ListItem 
+                noIndent
+                onPress={() => this.selecionaItem(item)}               
+                >
+                <Body>
+                  <Text>{item.nome}</Text>
+                  <Text note>{item.medicamento.nomeMedicamento}</Text>
+                </Body>
+              </ListItem>
+              </View>
+            )
+          })}
+        </List>
+      );
+    }
+    else{
+      return null;
+    }
+  }
+
   render() {
     return (
       <Container>
@@ -73,7 +146,7 @@ export default class RealizarDoacao extends Component {
         <Header>
           <Left>
             <Button transparent onPress={() => this.props.navigation.goBack()}>
-              <Icon name='arrow-back' />
+              <Image source={require('../../../images/return-icon.png')} resizeMode="contain" />
             </Button>
           </Left>
           <Body>
@@ -87,29 +160,22 @@ export default class RealizarDoacao extends Component {
 
           <Form>
 
-            <Item regular style={styles.formInput}>
+            <Item stackedLabel style={styles.formInput}>
+              <Label>Medicamento</Label>
               <Input 
-                placeholder='Nome do Medicamento'
                 value={this.state.nomeMedicamento}
-                onChangeText={(nomeMedicamento) => this.setState({ nomeMedicamento })}
+                onChangeText={(nomeMedicamento) => this.pesquisar(nomeMedicamento)}
+                onBlur={() =>  this.perdeFoco()}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </Item>
 
-            <Item regular style={styles.formInput}>
-              <Input 
-                placeholder='Tamanho (mg)'
-                value={this.state.tamanho}
-                onChangeText={(tamanho) => this.setState({ tamanho })}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </Item>
+            { this.mostaListaAutocomplete()}
 
-            <Item regular style={styles.formInput}>
+            <Item stackedLabel style={styles.formInput}>
+              <Label>Quantidade</Label>
               <Input 
-                placeholder='Quantidade'
                 value={this.state.quantidade}
                 onChangeText={(quantidade) => this.setState({ quantidade })}
                 autoCapitalize="none"
@@ -117,20 +183,21 @@ export default class RealizarDoacao extends Component {
               />
             </Item>
 
-            <Item regular style={styles.formInput}>
-              <DatePicker
-                locale={"ptBr"}
-                timeZoneOffsetInMinutes={undefined}
-                modalTransparent={true}
-                animationType={"fade"}
-                androidMode={"default"}
-                placeHolderText="Data de Validade"
-                textStyle={{ color: "#555" }}
-                placeHolderTextStyle={{ color: "#555" }}
-                format="YYYY-DD-MM"
-                onDateChange={(dataValidade) => this.alteraData(dataValidade)}
-              />
-            </Item>
+            <Text style={{ color: "#555", marginLeft: 15, marginTop: 15 }}>Data de Validade</Text>
+            <View style={{ backgroundColor: "#fff", flex: 1 }}>
+                <DatePicker
+                  placeHolderText=" "
+                  locale={"ptBr"}
+                  timeZoneOffsetInMinutes={undefined}
+                  modalTransparent={true}
+                  animationType={"fade"}
+                  androidMode={"default"}
+                  textStyle={{ color: "#555", flex: 1 }}
+                  placeHolderTextStyle={{ color: "#555" }}
+                  format="YYYY-DD-MM"
+                  onDateChange={(dataValidade) => this.alteraData(dataValidade)}
+                />
+              </View>
 
           </Form>
 
@@ -162,7 +229,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 2,
     borderColor: '#ccc',
-    color: '#fff',
     padding: 12,
     textAlign: 'center',
     marginLeft: 0

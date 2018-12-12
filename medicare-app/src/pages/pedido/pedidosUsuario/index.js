@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, AsyncStorage } from 'react-native';
-import { Toast, Container, Header, Content, List, ListItem, Text, Body, Title, Subtitle, Left, Right, Button, Icon, Fab } from 'native-base';
+import { StyleSheet, View, AsyncStorage, Image } from 'react-native';
+import { Toast, Container, Header, Content, List, ListItem, Text, Body, Title, Subtitle, Left, Right, Button, Fab } from 'native-base';
 import axios from 'axios';
 import api from '../../../services/api';
 
 export default class PedidosUsuario extends Component {
+
+
+
   static navigationOptions = {
     header: null,
   };
@@ -56,45 +59,45 @@ export default class PedidosUsuario extends Component {
     this.props.navigation.navigate('ExibirPedido', { idPedido: idPedido})
   }
 
-  montaIconeStatus(status) {
-    let cor = "";
-    let icone = "";
-    let letra = "";
+  montaIconeStatus = (status) => {
+    const iconePendente = require("../../../images/waiting-icon.png");
+    const iconeRecusado = require("../../../images/refused-icon.png");
+    const iconeAceito = require("../../../images/approved-icon.png");
+    const iconeEntregue = require("../../../images/delivered-icon.png");
+    const iconeCancelado = require("../../../images/cancelled-icon.png");
 
-    switch(status) {
-      case "PENDENTE":
-        cor = "#FF9501";
-        icone = "reload1";
-        letra = "P";
-        break;
-        case "RECUSADO":
-        cor = "#FF0000";
-        icone = "refresh";
-        letra = "R";
-        break;
-        case "ACEITO":
-        cor = "#00CC00";
-        icone = "refresh";
-        letra = "A";
-        break;
-        case "ENTREGUE":
-        cor = "#FF9501";
-        icone = "refresh";
-        letra = "E";
-        break;
-        case "CANCELADO":
-        cor = "#FF0000";
-        icone = "cancel";
-        letra = "C";
-        break;
-
+    try{
+      console.log("Entrou montar Icone");
+      if(status != null){
+        let icone = "";
+        console.log("Status: " + status);
+        switch(status) {
+  
+          case "RECUSADO":
+            return (<Image source={iconeRecusado} resizeMode="contain" />);
+            break;
+          case "PENDENTE":
+            return (<Image source={iconePendente} resizeMode="contain" />);
+            break;
+          case "ACEITO":
+            return (<Image source={iconeAceito} resizeMode="contain" />);
+            break;
+          case "ENTREGUE":
+            return (<Image source={iconeEntregue} resizeMode="contain" />);
+            break;
+          case "CANCELADO":
+            return (<Image source={iconeCancelado} resizeMode="contain" />);
+            break;
+        }        
+      }
+      else {
+        return null;
+      }
     }
-
-    return (
-      <Button style={{ backgroundColor: cor }}>
-          <Text bold>{letra}</Text>
-      </Button>
-      );
+    catch(_err) {
+      console.log(_err);
+      return null;
+    }
   }
 
   render() {
@@ -103,7 +106,7 @@ export default class PedidosUsuario extends Component {
           <Header>
             <Left>
               <Button transparent onPress={() => this.props.navigation.goBack()}>
-                <Icon name='arrow-back' />
+              <Image source={require('../../../images/return-icon.png')} resizeMode="contain" />
               </Button>
             </Left>
             <Body>
@@ -112,7 +115,7 @@ export default class PedidosUsuario extends Component {
             </Body>
             <Right>
               <Button transparent onPress={() => this.atualizarLista()}>
-                <Icon name='refresh' />
+                <Image source={require('../../../images/refresh-icon.png')} resizeMode="contain" />
               </Button>
             </Right>
 
@@ -124,23 +127,23 @@ export default class PedidosUsuario extends Component {
             <List>
               {this.state.listaPedidos.map((item, index) => {
                 return (
-                  <View key={item._id}>
+                  <View key={ item._id }>
                   <ListItem 
                     avatar
-                    button={true}
-                    onPress={() => this.handleClick(item._id)}
-                    first={index === 0}
-                    last={index === this.state.listaPedidos.length - 1}                  
+                    button={ true }
+                    onPress={ () => this.handleClick(item._id) }
+                    first={ index === 0 }
+                    last={ index === this.state.listaPedidos.length - 1 }                  
                     >
                     <Left>
-                      { this.montaIconeStatus(item.status )}
+                      { this.montaIconeStatus(item.status) }
                     </Left>
                     <Body>
-                      <Text>{item.nomeRemedio + " - " + item.tamanho + " mg"}</Text>
-                      <Text note>Quantidade: {item.quantidade}</Text>
+                      <Text>{ item.medicamentoComercial.nome }</Text>
+                      <Text note>Quantidade: { item.quantidade } - Data: { (new Date(item.dataCadastro)).toLocaleDateString() }</Text>
                     </Body>
                     <Right>
-                      <Icon name="arrow-forward" />
+                    <Image source={require('../../../images/next-icon.png')} resizeMode="contain" />
                     </Right>
                   </ListItem>
                   </View>
@@ -157,7 +160,7 @@ export default class PedidosUsuario extends Component {
             style={{ backgroundColor: '#5067FF' }}
             position="bottomRight"
             onPress={() => this.props.navigation.navigate('RealizarPedido')}>
-            <Icon name="add" />
+            <Image source={require('../../../images/add-icon.png')} resizeMode="contain" />
           </Fab>
 
         </Container>
@@ -171,7 +174,6 @@ export default class PedidosUsuario extends Component {
     },
     errorMessage: {
       textAlign: 'center',
-      color: '#ce2029',
       fontSize: 16,
       marginBottom: 15,
       marginHorizontal: 20,

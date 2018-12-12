@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Image, AsyncStorage } from 'react-native';
-import { Container, Header, Content, List, ListItem, Text, Body, Title, Subtitle, Left, Right, Button, Icon, Fab } from 'native-base';
+import { Container, Header, Content, List, ListItem, Text, Body, Title, Subtitle, Left, Right, Button, Fab } from 'native-base';
 import axios from 'axios';
 import api from '../../../services/api';
 
@@ -28,7 +28,7 @@ export default class DoacoesUsuario extends Component {
       console.log("entrou para atualizar lista de doacoes");
       axios.defaults.headers.common['Authorization'] = await AsyncStorage.getItem('token');    
 
-      await api.get('/doacoes')
+      await api.get('/doacoes/user')
       .then((res) => {
         console.log("recebeu retorno");        
         if(JSON.stringify(this.state.listaDoacoes) != JSON.stringify(res.data)){
@@ -37,19 +37,62 @@ export default class DoacoesUsuario extends Component {
         }        
       })
       .catch((res) => {
-        console.log(res);
+        console.log("erro 1"); 
+        console.log(JSON.stringify(res));
         this.setState({ error: JSON.stringify(res)+"" });
       });
 
     } 
     catch(err){
-      console.log(err);
+      console.log("erro 2"); 
+      console.log(JSON.stringify(err));
       this.setState({ error: 'Ocorreu um erro ao atualizar a lista de pedidos!' });
     }
   }
 
-  handleListItemClick = (item) => {
-    this.props.navigation.navigate('ExibirDoacao');
+  handleListItemClick = (idDoacao) => {
+    this.props.navigation.navigate('ExibirDoacao', { idDoacao: idDoacao});
+  }
+
+  montaIconeStatus = (status) => {
+    const iconePendente = require("../../../images/waiting-icon.png");
+    const iconeRecusado = require("../../../images/refused-icon.png");
+    const iconeAceito = require("../../../images/approved-icon.png");
+    const iconeEntregue = require("../../../images/delivered-icon.png");
+    const iconeCancelado = require("../../../images/cancelled-icon.png");
+
+    try{
+      console.log("Entrou montar Icone");
+      if(status != null){
+        let icone = "";
+        console.log("Status: " + status);
+        switch(status) {
+  
+          case "RECUSADO":
+            return (<Image source={iconeRecusado} resizeMode="contain" />);
+            break;
+          case "PENDENTE":
+            return (<Image source={iconePendente} resizeMode="contain" />);
+            break;
+          case "ACEITO":
+            return (<Image source={iconeAceito} resizeMode="contain" />);
+            break;
+          case "ENTREGUE":
+            return (<Image source={iconeEntregue} resizeMode="contain" />);
+            break;
+          case "CANCELADO":
+            return (<Image source={iconeCancelado} resizeMode="contain" />);
+            break;
+        }        
+      }
+      else {
+        return null;
+      }
+    }
+    catch(_err) {
+      console.log(_err);
+      return null;
+    }
   }
 
   render() {
@@ -60,7 +103,7 @@ export default class DoacoesUsuario extends Component {
         <Header noRight>
           <Left>
             <Button transparent onPress={() => this.props.navigation.goBack()}>
-              <Icon name='arrow-back' />
+              <Image source={require('../../../images/return-icon.png')} resizeMode="contain" />
             </Button>
           </Left>
           <Body>
@@ -68,7 +111,9 @@ export default class DoacoesUsuario extends Component {
             <Subtitle>Minhas Doações</Subtitle>
           </Body>
           <Right>
-
+            <Button transparent onPress={() => this.atualizarLista()}>
+                <Image source={require('../../../images/refresh-icon.png')} resizeMode="contain" />
+              </Button>
           </Right>
 
         </Header>
@@ -79,17 +124,21 @@ export default class DoacoesUsuario extends Component {
             {this.state.listaDoacoes.map((item, index) => {
               return (
                 <ListItem key={item._id}
+                  avatar
                   button={true}
-                  onPress={() => this.handleListItemClick(item)}
+                  onPress={() => this.handleListItemClick(item._id)}
                   first={index === 0}
                   last={index === this.state.listaDoacoes.length-1}
                 >
+                  <Left>
+                      { this.montaIconeStatus(item.status) }
+                    </Left>
                   <Body>
-                    <Text>{item.nomeMedicamento + " - " + item.tamanho + " mg"}</Text>
-                    <Text note>Quantidade: {item.quantidade}</Text>
+                    <Text>{item.medicamentoComercial.nome}</Text>
+                    <Text note>Quantidade: {item.quantidade} - Data: { (new Date(item.dataCadastro)).toLocaleDateString() }</Text>
                   </Body>
                   <Right>
-                      <Icon name="arrow-forward" />
+                    <Image source={require('../../../images/next-icon.png')} resizeMode="contain" />
                   </Right>
                 </ListItem>
               )
@@ -102,11 +151,10 @@ export default class DoacoesUsuario extends Component {
           <Fab
             active={true}
             direction="up"
-            containerStyle={{}}
             style={{ backgroundColor: '#5067FF' }}
             position="bottomRight"
             onPress={() => this.props.navigation.navigate('RealizarDoacao')}>
-            <Icon name="add" />
+            <Image source={require('../../../images/add-icon.png')} resizeMode="contain" />
           </Fab>
         </View>
 
@@ -118,8 +166,5 @@ export default class DoacoesUsuario extends Component {
 const styles = StyleSheet.create({
   createButton: {
     marginTop: 20
-  },
-  red: {
-    color: 'red',
-  },
+  }
 });

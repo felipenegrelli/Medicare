@@ -84,18 +84,18 @@ export default class Login extends Component {
           </View>
 
           <Form>
-            <Item regular style={styles.formInput}>
+            <Item stackedLabel last>
+              <Label>E-mail</Label>
               <Input 
-              placeholder='Email'
                 value={this.state.email}
                 onChangeText={this.handleEmailChange}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </Item>
-            <Item regular style={styles.formInput}>
+            <Item stackedLabel last>
+              <Label>Senha</Label>
               <Input 
-                placeholder='Senha'
                 value={this.state.password}
                 onChangeText={this.handlePasswordChange}
                 autoCapitalize="none"

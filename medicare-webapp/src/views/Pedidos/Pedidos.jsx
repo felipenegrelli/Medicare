@@ -6,7 +6,8 @@ import {
   CardTitle,
   Table,
   Row,
-  Col
+  Col,
+  Button
 } from "reactstrap";
 
 import { PanelHeader } from "components";
@@ -17,7 +18,7 @@ class TelaPedidos extends React.Component {
   state = {
     error: "",
     listaPedidos: [],
-    precisaAtualizar: ""
+    esperandoAjax: true
   };
 
   async atualizarLista() {
@@ -29,6 +30,7 @@ class TelaPedidos extends React.Component {
         .then(res => {
           console.log("recebeu retorno");        
           if(JSON.stringify(this.state.listaPedidos) !== JSON.stringify(res.data)){
+            this.setState({ esperandoAjax: false });
             this.setState({ listaPedidos: res.data });
             console.log("alterou estado");
             console.log(res.data);
@@ -60,6 +62,15 @@ class TelaPedidos extends React.Component {
     )
   }
 
+  formataData = (dateString) => {
+    const data = new Date(dateString);
+    return data.toLocaleDateString("pt-Br");
+  }
+
+  novoPedidoClicado = () => {
+    this.props.navigation.navigate('NovoPedido')
+  }
+ 
   montaTabela(){
     return (
       <Table responsive>
@@ -69,6 +80,7 @@ class TelaPedidos extends React.Component {
             <th className="text-center">Tamanho</th>
             <th className="text-center">Quantidade</th>
             <th className="text-center">Status</th>
+            <th className="text-center">Data</th> 
             <th className="text-right" style={{ paddingRight: 25 }}>Ações</th> 
           </tr>
         </thead>
@@ -77,9 +89,10 @@ class TelaPedidos extends React.Component {
             return (
               <tr key={item._id}>
                 <td>{item.nomeRemedio}</td>
-                <td className="text-center">{item.tamanho}</td>
+                <td className="text-center">{item.tamanho  + " mg"}</td>
                 <td className="text-center">{item.quantidade}</td>
                 <td className="text-center">{item.status}</td>
+                <td className="text-center">{this.formataData(item.dataCadastro) }</td>
                 <td className="text-right">
                   <button className="btn-icon btn btn-info btn-sm m-r-3">
                     <i className="now-ui-icons users_single-02"></i>
@@ -99,6 +112,18 @@ class TelaPedidos extends React.Component {
     )
   }
 
+  montaExibicao(){
+    if(this.state.esperandoAjax){
+      return null;
+    }
+    else if (this.state.listaPedidos.length > 0){
+      return this.montaTabela();
+    }
+    else{
+      return this.montaMensagemNenhumDado();
+    }
+  }
+
   render() {
     return (
       <div>
@@ -109,10 +134,11 @@ class TelaPedidos extends React.Component {
             <Col xs={12}>
               <Card>
                 <CardHeader>
-                  <CardTitle tag="h4">Lista de Pedidos</CardTitle>
+                  <CardTitle className="float-left">Lista de Pedidos</CardTitle>
+                  <Button color="info" className="float-right" href="/novo-pedido">Adicionar</Button>
                 </CardHeader>
                 <CardBody>
-                  { this.state.listaPedidos.length > 0 ? this.montaTabela() : this.montaMensagemNenhumDado(0)}
+                  { this.montaExibicao() }
                 </CardBody>
               </Card>
             </Col>

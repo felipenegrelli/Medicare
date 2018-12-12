@@ -3,22 +3,9 @@ import PropTypes from 'prop-types';
 
 import { View, Image, StyleSheet } from 'react-native';
 import { StackActions, NavigationActions } from 'react-navigation';
-import { Form, Input, Item, Label, Toast, Container, Content, Text, Button } from 'native-base';
+import { Form, Input, Item, Label, Toast, Container, Content, Text, Button, DatePicker } from 'native-base';
 
 import api from '../../services/api';
-
-// import {
-//   Container,
-//   Logo,
-//   SuccessMessage,
-//   Input,
-//   ErrorMessage,
-//   Button,
-//   ButtonText,
-//   SignInLink,
-//   SignInLinkText,
-//   Text
-// } from './styles';
 
 export default class Cadastro extends Component {
   static navigationOptions = {
@@ -37,7 +24,7 @@ export default class Cadastro extends Component {
     nome: '',
     email: '',
     password: '',
-    dataNascimento: '',
+    dataNascimento: null,
     documento:'',
     rg:'',
     endereco:'',
@@ -49,37 +36,48 @@ export default class Cadastro extends Component {
   };
 
   handleSignUpPress = async () => {
+    
     if (this.state.email.length === 0 || this.state.password.length === 0) {
       this.setState({ error: 'Preencha todos os campos para continuar!' }, () => false);
-    } else {
+    } 
+    else {
       try {
+        const dataNascFormatada = this.state.dataNascimento.getFullYear() + "-" + 
+                                  this.state.dataNascimento.getMonth() + "-" +
+                                  this.state.dataNascimento.getDate();
+
         await api.post('/users/cadastrar', {
           nome: this.state.nome,
           email: this.state.email,
           password: this.state.password,
-          dataNascimento: this.state.dataNascimento,
+          dataNascimento: dataNascFormatada,
           documento: this.state.documento,
           rg: this.state.rg,
           endereco: this.state.endereco,
           descricao: this.state.descricao,
           nomeMae: this.state.nomeMae,
-          tipo: 1,
+          tipo: "CLIENTE",
         })
         .then((res) => {
           this.setState({ error: "then" });
           this.history = res.data
+          console.log(res)
         })
         .catch((res) => {
           console.log(res)
           this.setState({ error: JSON.stringify(res)+"" });
         });
+
         console.log("ok");
         this.setState({ success: 'Conta criada com sucesso!', error: '' });
 
         setTimeout(this.goToLogin, 500);
+
       } catch (_err) {
-        //console.log(_err);
+
         this.setState({ error: _err+'!' });
+        console.log(_err);
+
       }
     }
   };
@@ -92,6 +90,11 @@ export default class Cadastro extends Component {
       ],
     });
     this.props.navigation.dispatch(resetAction);
+  }
+
+  alteraData = (dataNascimento) => {
+    console.log("entou");
+    this.setState({ dataNascimento })
   }
 
   render() {
@@ -138,12 +141,17 @@ export default class Cadastro extends Component {
             </Item>
 
             <Item regular style={styles.formInput}>
-              <Input 
-                placeholder='Data de Nascimento'
-                value={this.state.dataNascimeto}
-                onChangeText={(dataNascimento) => this.setState({ dataNascimento })}
-                autoCapitalize="none"
-                autoCorrect={false}
+              <DatePicker
+                locale={"ptBr"}
+                timeZoneOffsetInMinutes={undefined}
+                modalTransparent={true}
+                animationType={"fade"}
+                androidMode={"default"}
+                placeHolderText="Data de Nascimento"
+                textStyle={{ color: "#555" }}
+                placeHolderTextStyle={{ color: "#555" }}
+                format="YYYY-DD-MM"
+                onDateChange={(dataNascimento) => this.alteraData(dataNascimento)}
               />
             </Item>
 

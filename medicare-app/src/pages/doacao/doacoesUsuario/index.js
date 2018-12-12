@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Image } from 'react-native';
-
+import { StyleSheet, View, Image, AsyncStorage } from 'react-native';
 import { Container, Header, Content, List, ListItem, Text, Body, Title, Subtitle, Left, Right, Button, Icon, Fab } from 'native-base';
+import axios from 'axios';
+import api from '../../../services/api';
 
 export default class DoacoesUsuario extends Component {
   static navigationOptions = {
@@ -9,23 +10,42 @@ export default class DoacoesUsuario extends Component {
   };
 
   state = {
-    listaDoacoes: [
-      {
-        codigo: 1,
-        nome: "Paracetamol - 500 mg",
-        data: "09/10/2018"
-      },
-      {
-        codigo: 2,
-        nome: "Sibutramina - 25 mg",
-        data: "12/10/2018"
-      },
-      {
-        codigo: 3,
-        nome: "Fluoxetina - 15 mg",
-        data: "16/10/2018"
-      },
-    ]
+    listaDoacoes: []
+  }
+
+  componentDidMount() {
+    this.subs = [
+      this.props.navigation.addListener("didFocus", () => this.atualizarLista())
+    ];
+  }
+
+  componentWillUnmount() {
+    this.subs.forEach(sub => sub.remove());
+  }
+
+  async atualizarLista() {
+    try {
+      console.log("entrou para atualizar lista de doacoes");
+      axios.defaults.headers.common['Authorization'] = await AsyncStorage.getItem('token');    
+
+      await api.get('/doacoes')
+      .then((res) => {
+        console.log("recebeu retorno");        
+        if(JSON.stringify(this.state.listaDoacoes) != JSON.stringify(res.data)){
+          this.setState({ listaDoacoes: res.data });
+          console.log("alterou estado");
+        }        
+      })
+      .catch((res) => {
+        console.log(res);
+        this.setState({ error: JSON.stringify(res)+"" });
+      });
+
+    } 
+    catch(err){
+      console.log(err);
+      this.setState({ error: 'Ocorreu um erro ao atualizar a lista de pedidos!' });
+    }
   }
 
   handleListItemClick = (item) => {
@@ -58,15 +78,15 @@ export default class DoacoesUsuario extends Component {
           <List>
             {this.state.listaDoacoes.map((item, index) => {
               return (
-                <ListItem key={item.codigo}
+                <ListItem key={item._id}
                   button={true}
                   onPress={() => this.handleListItemClick(item)}
                   first={index === 0}
                   last={index === this.state.listaDoacoes.length-1}
                 >
                   <Body>
-                    <Text>{item.nome}</Text>
-                    <Text note>{item.data}</Text>
+                    <Text>{item.nomeMedicamento + " - " + item.tamanho + " mg"}</Text>
+                    <Text note>Quantidade: {item.quantidade}</Text>
                   </Body>
                   <Right>
                       <Icon name="arrow-forward" />

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import { StyleSheet, View, Image } from 'react-native';
-import { Container, Header, Content, Button, Text, Body, Title, Left, Right, Form, Item, Input, Label } from 'native-base';
+import { StyleSheet, AsyncStorage, View, Image } from 'react-native';
+import { Container, Header, Content, Button, Text, Body, Title, Left, Right, Icon, Form, Item, Input, Label } from 'native-base';
 import { StackActions, NavigationActions } from 'react-navigation';
 
 export default class Principal extends Component {
@@ -28,6 +28,12 @@ export default class Principal extends Component {
     this.props.navigation.navigate('PedidosUsuario');
   };
 
+  onPressLogoff = () => {
+    AsyncStorage.removeItem('token');
+    AsyncStorage.removeItem('id');
+    this.props.navigation.navigate('Login');
+  };
+
   render() {
     return (
       <Container>
@@ -37,7 +43,11 @@ export default class Principal extends Component {
           <Body>
             <Title>Home</Title>
           </Body>
-          <Right />
+          <Right>
+            <Button transparent onPress={() => this.onPressLogoff()}>
+              <Text>Sair</Text>
+            </Button>
+          </Right>
         </Header>
 
         <Content padder>

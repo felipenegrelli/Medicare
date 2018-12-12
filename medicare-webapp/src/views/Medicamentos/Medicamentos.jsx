@@ -12,7 +12,7 @@ import {
 import { PanelHeader } from "components";
 import api from "../../services/api";
 
-class TelaDoacoes extends React.Component {
+class Medicamentos extends React.Component {
   state = {
     error: "",
     listaDoacoes: [],
@@ -131,8 +131,8 @@ class TelaDoacoes extends React.Component {
             <Col xs={12}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="float-left">Lista de Doações</CardTitle>
-                  <Button color="info" className="float-right" href="/nova-doacao">Adicionar</Button>
+                  <CardTitle className="float-left">Lista de Medicamentos</CardTitle>
+                  <Button color="info" className="float-right" href="/novo-medicamento">Adicionar</Button>
                 </CardHeader>
                 <CardBody>
                   { this.montaExibicao() }
@@ -147,4 +147,4 @@ class TelaDoacoes extends React.Component {
   }
 }
 
-export default TelaDoacoes;
+export default Medicamentos;

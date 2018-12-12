@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 
-import { StyleSheet, View, Image } from 'react-native';
-import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Icon } from 'native-base';
+import { StyleSheet, AsyncStorage, View, Image } from 'react-native';
+import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Icon, Toast } from 'native-base';
+import api from '../../../services/api';
 
 export default class ExibirPedido extends Component {
   static navigationOptions = {
@@ -17,32 +19,119 @@ export default class ExibirPedido extends Component {
   };
 
   state = {
-    nome: "Paracetamol 500 mg",
-    data_validade: "05/2019",
-    quantidade: 20,
-    status: "Pendente"
+    id: null,
+    dataCadastro: null,
+    nomeMedico: null,
+    nomeRemedio: null,
+    quantidade: null,
+    status: null,
+    tamanho: null,
+    crmMedico: null
   };
 
   async atualizar() {
     try {
+      if(this.state.id !== "" && this.state.id !== null) {
+        console.log("entrou para atualizar");
+        console.log("id: " + this.state.id);
+        await api.get('/pedidos/' + this.state.id)
+        .then((res) => {
 
-      await api.get('/pedidos/')
-      .then((res) => {
-        this.setState({ listaPedidos: res.data});
-      })
-      .catch((res) => {
-        this.setState({ error: JSON.stringify(res)+"" });
-      });
+          const dataCadastro = new Date(res.data.dataCadastro);
+
+          this.setState({ 
+            dataCadastro: dataCadastro.toLocaleDateString(),
+            nomeMedico: res.data.nomeMedico,
+            nomeRemedio: res.data.nomeRemedio,
+            quantidade: res.data.quantidade,
+            status: res.data.status,
+            tamanho: res.data.tamanho,
+            crmMedico: res.data.crmMedico
+          });
+
+          console.log(res.data);
+        })
+        .catch((res) => {
+          this.setState({ error: JSON.stringify(res)+"" });
+          console.log(res);
+        });
+      }
+      else {
+        console.log("entrou mas nao tem id");
+      }
+    } 
+    catch(err){
+      this.setState({ error: 'Ocorreu um erro ao atualizar a lista de pedidos!' });
+      console.log(err);
+    }
+  }
+
+  async handleCancelarPedido () {
+    try {
+
+        console.log("entrou para cancelar");
+
+        axios.defaults.headers.common['Authorization'] = await AsyncStorage.getItem('token');
+
+        await api.post('/pedidos/' + this.state.id + "/atualizarSituacao", {
+          status: "CANCELADO"
+        })
+        .then((res) => {
+
+          console.log(res.data);
+          this.exibirToast();
+          this.atualizar();
+        })
+        .catch((res) => {
+          this.setState({ error: JSON.stringify(res)+"" });
+          console.log(res);
+        });
 
     } 
     catch(err){
       this.setState({ error: 'Ocorreu um erro ao atualizar a lista de pedidos!' });
+      console.log(err);
     }
+
+    //this.props.navigation.navigate('Principal');
+  };
+
+  
+  exibirToast () {
+    Toast.show({
+      text: 'Pedido cancelado com sucesso!',
+      buttonText: "Ok",
+      duration: 3000,
+      type: "success",
+      position: "bottom"
+    });
   }
 
-  handleCancelarPedido = () => {
-    this.props.navigation.navigate('Principal');
-  };
+  componentDidMount() {
+    this.subs = [
+      this.props.navigation.addListener("didFocus", () => this.atualizar())
+    ];
+
+    const { navigation } = this.props;
+    const idPedido = navigation.getParam('idPedido');
+    console.log("entrou");
+    console.log(idPedido);
+    this.setState({ id: idPedido })
+  }
+
+  componentWillUnmount() {
+    this.subs.forEach(sub => sub.remove());
+  }
+
+  exibeBotaoCancelar() {
+    if(this.state.status == "PENDENTE"){
+      return (
+          <Button block danger style={{ marginTop: 10, marginBottom: 30 }} onPress={() => this.handleCancelarPedido()}>
+            <Text>Cancelar Pedido</Text>
+          </Button>
+      );
+    }
+  }
 
   render() {
     return (
@@ -69,26 +158,36 @@ export default class ExibirPedido extends Component {
 
           <Form>
             <Item stackedLabel>
-              <Label>Nome do Medicamento</Label>
-              <Input disabled >{this.state.nome}</Input>
+              <Label>Status do Pedido</Label>
+              <Input disabled >{this.state.status}</Input>
             </Item>
             <Item stackedLabel>
-              <Label>Data de Validade</Label>
-              <Input disabled >{this.state.data_validade}</Input>
+              <Label>Nome do Medicamento</Label>
+              <Input disabled >{this.state.nomeRemedio}</Input>
+            </Item>
+            <Item stackedLabel>
+              <Label>Tamanho</Label>
+              <Input disabled >{this.state.tamanho ? this.state.tamanho + " mg" : ""}</Input>
             </Item>
             <Item stackedLabel>
               <Label>Quantidade</Label>
               <Input disabled >{this.state.quantidade}</Input>
             </Item>
+            <Item stackedLabel>
+              <Label>Data de Cadastro</Label>
+              <Input disabled >{this.state.dataCadastro}</Input>
+            </Item>
+            <Item stackedLabel>
+              <Label>Nome do Medico</Label>
+              <Input disabled >{this.state.nomeMedico}</Input>
+            </Item>
             <Item stackedLabel last>
-              <Label>Status do Pedido</Label>
-              <Input disabled >{this.state.status}</Input>
+              <Label>CRM do Médico</Label>
+              <Input disabled >{this.state.crmMedico}</Input>
             </Item>
           </Form>
 
-          <Button block danger style={{ marginTop: 50 }} onPress={this.handleCancelarPedido}>
-            <Text>Cancelar Pedido</Text>
-          </Button>
+          { this.exibeBotaoCancelar() }
 
         </Content>
 

@@ -4,8 +4,9 @@
     "transform-class-properties",
     "transform-react-jsx",
     "transform-object-rest-spread",
+    "emotion",
     ["module-resolver", {
-      "root": ["./src"],
+      "root": ["./src"]
     }],
     ["import-rename", {"^(.*)\\.jsx$": "$1"}]
   ]

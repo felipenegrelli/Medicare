@@ -3,8 +3,9 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 
 import { StackActions, NavigationActions } from 'react-navigation';
-import { StyleSheet, View, AsyncStorage } from 'react-native';
+import { StyleSheet, View, AsyncStorage, TouchableOpacity, } from 'react-native';
 import { Container, Header, Content, Button, Text, Body, Title, Subtitle, Left, Right, Form, Item, Input, Label, Icon, Thumbnail } from 'native-base';
+import { Autocomplete } from 'native-base-autocomplete';
 
 import api from '../../../services/api';
 
@@ -25,7 +26,8 @@ export default class RealizarPedido extends Component {
     tamanho: null,
     quantidade: null,
     nomeMedico: "",
-    error: ""
+    error: "",
+    query: ""
 
   };
 
@@ -41,7 +43,7 @@ export default class RealizarPedido extends Component {
         nomeMedico: this.state.nomeMedico,
       })
       .then(res => {
-        this.props.navigation.navigate('PedidosUsuario', { precisaAtualizar: true });
+        this.props.navigation.navigate('PedidosUsuario');
       })
       .catch((res) => {
         this.setState({ error: 'Houve um ao salvar o pedido: ' + _err.statusMessage });
@@ -54,6 +56,9 @@ export default class RealizarPedido extends Component {
   };
 
   render() {
+    const { query } = this.state;
+    const data = this._filterData(query);
+
     return (
       <Container>
 
@@ -74,9 +79,22 @@ export default class RealizarPedido extends Component {
 
           <Form>
 
-            <Item regular style={styles.formInput}>
+            <View style={styles.autocompleteContainer}>
+              <Autocomplete 
+                data={data}
+                defaultValue={query}
+                onChangeText={text => this.setState({ query: text })}
+                renderItem={data => (
+                  <TouchableOpacity onPress={() => this.setState({ query: data })}>
+                    <Text>{data}</Text>
+                  </TouchableOpacity>
+                )} 
+              />
+            </View>
+
+            <Item stackedLabel>
+              <Label>Nome do Medicamento</Label>
               <Input 
-                placeholder='Nome do Medicamento'
                 value={this.state.nomeRemedio}
                 onChangeText={(nomeRemedio) => this.setState({ nomeRemedio })}
                 autoCapitalize="none"
@@ -84,19 +102,10 @@ export default class RealizarPedido extends Component {
               />
             </Item>
 
-            <Item regular style={styles.formInput}>
-              <Input 
-                placeholder='Tamanho (mg)'
-                value={this.state.tamanho}
-                onChangeText={(tamanho) => this.setState({ tamanho })}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </Item>
 
-            <Item regular style={styles.formInput}>
+            <Item stackedLabel>
+              <Label>Quantidade</Label>
               <Input 
-                placeholder='Quantidade'
                 value={this.state.quantidade}
                 onChangeText={(quantidade) => this.setState({ quantidade })}
                 autoCapitalize="none"
@@ -104,9 +113,9 @@ export default class RealizarPedido extends Component {
               />
             </Item>
 
-            <Item regular style={styles.formInput}>
+            <Item stackedLabel>
+              <Label>Nome do Médico</Label>
               <Input 
-                placeholder='Nome do Medico'
                 value={this.state.nomeMedico}
                 onChangeText={(nomeMedico) => this.setState({ nomeMedico })}
                 autoCapitalize="none"
@@ -198,5 +207,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 15,
     marginHorizontal: 20,
+  },
+  autocompleteContainer: {
+    flex: 1,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 1
   }
 });

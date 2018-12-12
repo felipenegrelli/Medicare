@@ -20,8 +20,8 @@ export default class Login extends Component {
   };
 
   state = {
-    email: '',
-    password: '',
+    email: 'felipenegrelli@gmail.com',
+    password: 'Felipe123',
     error: '',
   };
 
@@ -56,6 +56,7 @@ export default class Login extends Component {
         });
 
         await AsyncStorage.setItem('token', response.data.token);
+        await AsyncStorage.setItem('id', response.data._id);
 
         const resetAction = StackActions.reset({
           index: 0,
@@ -67,6 +68,7 @@ export default class Login extends Component {
 
       } catch (_err) {
         this.setState({ error: 'Houve um problema com o login, verifique suas credenciais!' });
+        console.log(_err)
       }
     }
   };
